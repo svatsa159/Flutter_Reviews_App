@@ -1,6 +1,6 @@
-# hello
+# ReviewsbyVatsa Flutter App
 
-A new Flutter project.
+A Flutter Implementation of reviewsbyvatsa.wtf
 
 ## Getting Started
 
