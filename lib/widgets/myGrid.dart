@@ -26,13 +26,21 @@ class myGrid extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(
-                  datas.posterpath == null
+                FadeInImage.assetNetwork(
+                  placeholder: "assets/loader.gif",
+                  image: datas.posterpath == null
                       ? "https://via.placeholder.com/150x200"
                       : 'https://image.tmdb.org/t/p/w500/' + datas.posterpath,
-                  fit: BoxFit.cover,
                   width: 100,
+                  fit: BoxFit.cover,
                 ),
+                // Image.network(
+                //   datas.posterpath == null
+                //       ? "https://via.placeholder.com/150x200"
+                //       : 'https://image.tmdb.org/t/p/w500/' + datas.posterpath,
+                //   fit: BoxFit.cover,
+                //   width: 100,
+                // ),
                 Container(
                   // color: Colors.cyan,
                   padding:
@@ -48,14 +56,21 @@ class myGrid extends StatelessWidget {
                         Text(datas.name,
                             maxLines: 3,
                             softWrap: true,
-                            overflow: TextOverflow.visible,
-                            style:
-                                TextStyle(fontSize: 30, color: Colors.black)),
-                        Text(
-                          "Release Date : " + datas.date,
-                          maxLines: 3,
-                          softWrap: true,
-                          textAlign: TextAlign.left,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 26,
+                                color: Colors.white,
+                                fontFamily: 'WorkSans')),
+                        Container(
+                          margin: EdgeInsets.only(top: 10),
+                          child: Text("Release Date : " + datas.date,
+                              maxLines: 3,
+                              softWrap: true,
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'WorkSansRegular',
+                                  letterSpacing: 1.1)),
                         )
                       ]),
                 ),

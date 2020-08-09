@@ -52,7 +52,11 @@ class _newPageState extends State<newPage> {
                   padding: const EdgeInsets.only(bottom: 15, left: 5),
                   child: Text(
                     "Search Results for \"" + data['text'] + "\"",
-                    style: TextStyle(color: Colors.black, fontSize: 20),
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontFamily: 'WorkSansRegular',
+                        letterSpacing: -0.4),
                   ),
                 ),
               ),

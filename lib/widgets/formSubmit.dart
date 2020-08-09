@@ -14,7 +14,7 @@ class formSubmit extends StatefulWidget {
 
 class _formSubmitState extends State<formSubmit> {
   final _form_key = GlobalKey<FormState>();
-  int _x = 1;
+  int _x = 0;
   bool _isLoading = false;
   final TextEditingController _myController = new TextEditingController();
   @override
@@ -123,57 +123,67 @@ class _formSubmitState extends State<formSubmit> {
               ],
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Visibility(
-                  visible: _isLoading,
-                  child: Center(
-                    child: CircularProgressIndicator(),
+          Container(
+            margin: const EdgeInsets.only(top: 85.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 10),
+                  height: 40,
+                  width: 40,
+                  // color: Colors.blue,
+                  padding: const EdgeInsets.all(10.0),
+                  child: Visibility(
+                    visible: _isLoading,
+                    child: CircularProgressIndicator(
+                      valueColor: new AlwaysStoppedAnimation<Color>(
+                          customColor.hexToColor(customColor.forestBlues)),
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 85.0),
-                child: FlatButton(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  color: customColor.hexToColor(customColor.forestBlues),
-                  onPressed: () {
-                    if (_form_key.currentState.validate()) {
-                      FocusScope.of(context).unfocus();
-                      setState(() {
-                        _isLoading = true;
-                      });
-                      // print("heyyyyyyyyyy " + _x.toString());
-                      // Process data.
-                      // print(myController.text);
-                      getData(_myController.text, _x)
-                          .then((String x) => Navigator.pushNamed(
-                                  context, '/searchResults', arguments: {
-                                'x': x,
-                                'text': _myController.text,
-                                'val': _x
-                              }))
-                          .then((value) {
-                        _myController.clear();
+                Container(
+                  child: FlatButton(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    color: customColor.hexToColor(customColor.forestBlues),
+                    onPressed: () {
+                      if (_form_key.currentState.validate()) {
+                        FocusScope.of(context).unfocus();
                         setState(() {
-                          _isLoading = false;
+                          _isLoading = true;
                         });
-                      });
-                    }
-                  },
-                  child: Text(
-                    'Submit',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17),
+                        // print("heyyyyyyyyyy " + _x.toString());
+                        // Process data.
+                        // print(myController.text);
+                        getData(_myController.text, _x).then((String x) {
+                          if (x == null) {
+                          } else {
+                            Navigator.pushNamed(context, '/searchResults',
+                                arguments: {
+                                  'x': x,
+                                  'text': _myController.text,
+                                  'val': _x
+                                });
+                          }
+                        }).then((value) {
+                          _myController.clear();
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        });
+                      }
+                    },
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -182,17 +192,23 @@ class _formSubmitState extends State<formSubmit> {
 }
 
 Future<String> getData(String title, int x) async {
-  final http.Response response = await http.post(
-    'http://192.168.43.50:5000/search_api',
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{'names': title, 'stv': x.toString()}),
-  );
+  http.Response response;
+  try {
+    response = await http.post(
+      'https://www.reviewsbyvatsa.wtf/search_api',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{'names': title, 'stv': x.toString()}),
+    );
+  } catch (e) {
+    print(e);
+    return null;
+  }
   if (response.statusCode == 200) {
     return response.body;
   } else {
     print(response.body);
-    // throw Exception('Failed to load album');
+    throw Exception('Failed to load album');
   }
 }

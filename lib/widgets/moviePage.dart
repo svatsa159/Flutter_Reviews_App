@@ -13,6 +13,7 @@ class moviePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: customColor.hexToColor(customColor.forestBlues),
       appBar: AppBar(
+        elevation: 0,
         backgroundColor: customColor.hexToColor(customColor.forestBlues),
         title: Text(
           mv.name,

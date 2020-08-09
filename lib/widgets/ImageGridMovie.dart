@@ -41,9 +41,6 @@ class ImageGridMovie extends StatelessWidget {
                   itemBuilder: (BuildContext context, int index) {
                     return GridTile(
                       child: Container(
-                        color:
-                            customColor.hexToColor(customColor.waterfallEdited),
-                        padding: EdgeInsets.all(5),
                         margin: EdgeInsets.symmetric(vertical: 20),
                         alignment: Alignment.center,
                         child: FocusedMenuHolder(
@@ -97,11 +94,22 @@ class ImageGridMovie extends StatelessWidget {
                                     'type': 0
                                   });
                             },
-                            child: Image.network(
-                              (imagedata[index])['file_path'] == null
-                                  ? "https://via.placeholder.com/150x200"
-                                  : 'https://image.tmdb.org/t/p/w500/' +
-                                      (imagedata[index])['file_path'],
+                            child: Container(
+                              padding: EdgeInsets.all(7),
+                              color: customColor
+                                  .hexToColor(customColor.waterfallEdited),
+                              child: Container(
+                                  padding: EdgeInsets.all(3),
+                                  color: customColor
+                                      .hexToColor(customColor.forestBlues),
+                                  child: FadeInImage.assetNetwork(
+                                    placeholder: "assets/loader.gif",
+                                    image: (imagedata[index])['file_path'] ==
+                                            null
+                                        ? "https://via.placeholder.com/150x200"
+                                        : 'https://image.tmdb.org/t/p/w500/' +
+                                            (imagedata[index])['file_path'],
+                                  )),
                             ),
                           ),
                         ),
@@ -117,7 +125,7 @@ class ImageGridMovie extends StatelessWidget {
 
 Future<String> getMovieData(String id) async {
   final http.Response response = await http.get(
-    'http://192.168.43.50:5000/movie_api/' + id,
+    'https://www.reviewsbyvatsa.wtf/movie_api/' + id,
   );
   if (response.statusCode == 200) {
     // print(response.body);
