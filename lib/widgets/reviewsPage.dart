@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:hello/widgets/customColor.dart';
@@ -68,23 +69,45 @@ class _reviewsPage extends State<reviewsPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Stack(children: [
-                  Container(
-                    child: Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            height: MediaQuery.of(context).size.height * 0.3,
-                            child: FadeInImage.assetNetwork(
-                              placeholder: "assets/loader3.gif",
-                              image: "https://image.tmdb.org/t/p/w500/" +
-                                  mv["bdpath"],
-                              fit: BoxFit.fitHeight,
+                  mv["bdpath"] != null
+                      ? Container(
+                          child: Center(
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.3,
+                                  child: FadeInImage.assetNetwork(
+                                    placeholder: "assets/loader3.gif",
+                                    image: "https://image.tmdb.org/t/p/w500/" +
+                                        mv["bdpath"],
+                                    fit: BoxFit.fitHeight,
+                                  ),
+                                )
+                              ],
                             ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+                          ),
+                        )
+                      : Container(
+                          child: Center(
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.3,
+                                  child: FadeInImage.assetNetwork(
+                                    placeholder: "assets/loader3.gif",
+                                    image: "https://image.tmdb.org/t/p/w500/" +
+                                        mv['imagedata']["file_path"]
+                                            .substring(1),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
                   SlideTransition(
                     position: _offsetAnimation,
                     child: Container(
@@ -201,8 +224,8 @@ class _reviewsPage extends State<reviewsPage>
                                               formKey.currentState.validate();
                                               setState(() {
                                                 _rating = value;
-                                                print("changed");
-                                                print(_rating);
+                                                // print("changed");
+                                                // print(_rating);
                                               });
                                             },
                                             validator: (value) => value == null
@@ -267,7 +290,7 @@ class _reviewsPage extends State<reviewsPage>
                                               formKey.currentState.validate();
                                               setState(() {
                                                 _platform = value;
-                                                print("changed");
+                                                // print("changed");
                                               });
                                             },
                                             validator: (value) => value == null
@@ -325,7 +348,7 @@ class _reviewsPage extends State<reviewsPage>
                                               formKey.currentState.validate();
                                               setState(() {
                                                 _logo = value;
-                                                print("changed");
+                                                // print("changed");
                                               });
                                             },
                                             items: [0, 1]
@@ -343,8 +366,9 @@ class _reviewsPage extends State<reviewsPage>
                                   alignment: Alignment.center,
                                   margin: EdgeInsets.only(top: 20, bottom: 300),
                                   width: 120,
-                                  child: RaisedButton(
+                                  child: FlatButton(
                                     color: Theme.of(context).primaryColor,
+                                    padding: EdgeInsets.symmetric(vertical: 12),
                                     onPressed: () {
                                       if (formKey.currentState.validate()) {
                                         pushData(
@@ -354,21 +378,45 @@ class _reviewsPage extends State<reviewsPage>
                                                 _platform_id[_platform],
                                                 _logos[_logo])
                                             .then((value) {
-                                          Fluttertoast.showToast(
-                                              msg: "Review Uploaded",
-                                              toastLength: Toast.LENGTH_SHORT,
-                                              gravity: ToastGravity.TOP,
-                                              backgroundColor: Colors.red[400],
-                                              textColor: Colors.white,
-                                              fontSize: 16.0);
-                                          _launchURL(
-                                                  'https://www.reviewsbyvatsa.wtf/',
-                                                  mv["type"],
-                                                  mv["id"].toString())
-                                              .then((value) {
-                                            Navigator.popUntil(context,
-                                                ModalRoute.withName('/'));
-                                          });
+                                          if (value != null) {
+                                            Fluttertoast.showToast(
+                                                msg: "Review Uploaded",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.TOP,
+                                                backgroundColor: customColor
+                                                    .hexToColor(customColor
+                                                        .forestBlues),
+                                                textColor: Colors.white,
+                                                fontSize: 16.0);
+                                            _launchURL(
+                                                    'https://www.reviewsbyvatsa.wtf/',
+                                                    mv["type"],
+                                                    mv["id"].toString())
+                                                .then((value) {
+                                              Navigator.popUntil(context,
+                                                  ModalRoute.withName('/'));
+                                            });
+                                          } else if (value == "error") {
+                                            Fluttertoast.showToast(
+                                                msg: "Network Error",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.BOTTOM,
+                                                backgroundColor: customColor
+                                                    .hexToColor(customColor
+                                                        .forestBlues),
+                                                textColor: Colors.white,
+                                                fontSize: 16.0);
+                                          } else {
+                                            Fluttertoast.showToast(
+                                                msg: "Server Not Reachable",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.BOTTOM,
+                                                backgroundColor: customColor
+                                                    .hexToColor(customColor
+                                                        .forestBlues),
+                                                textColor: Colors.white,
+                                                fontSize: 16.0);
+                                          }
                                         });
                                       }
                                       // .then((value) => Navigator.popUntil(
@@ -411,36 +459,45 @@ Future<String> pushData(dynamic mv, String creview, String crating,
   }).toList();
   var string = genresL.toString();
   String genres = (string.substring(1, string.length - 1));
-  final http.Response response = await http.post(
-    'https://www.reviewsbyvatsa.wtf/save/' + mv["type"].toString(),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      "movie_id": movie_id,
-      "imgurl": imgurl,
-      "name": name,
-      "review": review,
-      "rating": rating,
-      "platform": platform,
-      "dark": dark,
-      "bdpath": bdpath,
-      "genres": genres
-    }),
-  );
+  http.Response response;
+  try {
+    response = await http.post(
+      'https://www.reviewsbyvatsa.wtf/save/' + mv["type"].toString(),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        "movie_id": movie_id,
+        "imgurl": imgurl,
+        "name": name,
+        "review": review,
+        "rating": rating,
+        "platform": platform,
+        "dark": dark,
+        "bdpath": bdpath,
+        "genres": genres
+      }),
+    );
+  } on SocketException catch (e) {
+    print(e.toString());
+    return null;
+  } catch (e) {
+    print(e);
+    return null;
+  }
   if (response.statusCode == 200) {
-    print("doneeeee");
+    // print("doneeeee");
     // _launchURL('/', mv["type"], movie_id);
     return response.body;
   } else {
-    print(response.body);
-    throw Exception('Failed to load album');
+    // print(response.body);
+    return "error";
   }
 }
 
 _launchURL(url, type, id) async {
   String svg = type == 0 ? 'svg/' : 'svg_series/';
-  print(url + svg + id);
+  // print(url + svg + id);
   // const url = 'https://flutter.io';
   if (await canLaunch(url + svg + id)) {
     await launch(

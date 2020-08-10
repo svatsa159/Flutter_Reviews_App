@@ -27,6 +27,30 @@ class myGrid extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FadeInImage.assetNetwork(
+                  imageErrorBuilder: (bc, obj, stc) {
+                    return Container(
+                      alignment: Alignment.center,
+                      color: Colors.white70,
+                      width: 100,
+                      height: 150,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                          ),
+                          Text(
+                            "Error loading Image",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontFamily: "WorkSansRegular", fontSize: 12),
+                          )
+                        ],
+                      ),
+                    );
+                  },
                   placeholder: "assets/loader.gif",
                   image: datas.posterpath == null
                       ? "https://via.placeholder.com/150x200"

@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:hello/widgets/customColor.dart';
+import 'package:permission_handler/permission_handler.dart';
 // import 'package:image_downloader/image_downloader.dart';
 // import 'package:intent/intent.dart' as android_intent;
 // import 'package:intent/action.dart' as android_action;
@@ -29,20 +30,37 @@ class ImageGridSeries extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
-    FlutterDownloader.initialize();
+    FlutterDownloader.initialize(debug: true);
     return FutureBuilder(
         builder: (context, projectSnap) {
-          if (projectSnap.connectionState == ConnectionState.none &&
+          if (projectSnap.connectionState == ConnectionState.waiting &&
               projectSnap.data == null) {
-            print('project snapshot data is: ${projectSnap.data}');
-            return Container();
-          } else {
+            // print('project snapshot data is: ${projectSnap.data}');
+            return Container(
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).size.height * 0.4),
+              child: Center(
+                  child: Column(
+                children: [
+                  Image(
+                    image: AssetImage("assets/loader4.gif"),
+                    width: 50,
+                  ),
+                  Text("Loading Images",
+                      style: TextStyle(
+                          fontFamily: "WorkSansRegular", color: Colors.white)),
+                ],
+              )),
+            );
+          } else if (projectSnap.connectionState == ConnectionState.done &&
+              projectSnap.data != null) {
             var f = (projectSnap.data);
             if (f == null) {
               return Container();
             } else {
+              // print(f);
               var imagedata = (json.decode(f)['images'])['posters'];
-              print(imagedata.length);
+              // print(imagedata.length);
               return GridView.builder(
                   padding: EdgeInsets.symmetric(vertical: 50),
                   itemCount: imagedata.length,
@@ -72,28 +90,60 @@ class ImageGridSeries extends StatelessWidget {
                                       textColor: Colors.white,
                                       fontSize: 16.0);
                                   getExternalStorageDirectory().then((dir) {
-                                    FlutterDownloader.enqueue(
-                                            url:
-                                                "https://image.tmdb.org/t/p/original/" +
-                                                    (imagedata[index]
-                                                        ['file_path']),
-                                            savedDir: (dir.path),
-                                            showNotification: true,
-                                            openFileFromNotification: true)
-                                        .then((value) {
-                                      Fluttertoast.showToast(
-                                          msg: "Download Completed",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor: Colors.red[400],
-                                          textColor: Colors.white,
-                                          fontSize: 16.0);
+                                    // print(dir);
+                                    Permission.storage.status.then((value) {
+                                      if (value ==
+                                          PermissionStatus.undetermined) {
+                                        Permission.storage
+                                            .request()
+                                            .isGranted
+                                            .then((value) {
+                                          FlutterDownloader.enqueue(
+                                                  url:
+                                                      "https://image.tmdb.org/t/p/original/" +
+                                                          (imagedata[index]
+                                                              ['file_path']),
+                                                  savedDir: (dir.path),
+                                                  showNotification: true,
+                                                  openFileFromNotification:
+                                                      true)
+                                              .then((value) {
+                                            Fluttertoast.showToast(
+                                                msg: "Download Completed",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.BOTTOM,
+                                                backgroundColor:
+                                                    Colors.red[400],
+                                                textColor: Colors.white,
+                                                fontSize: 16.0);
+                                          });
+                                        });
+                                      } else if (value ==
+                                          PermissionStatus.granted) {
+                                        FlutterDownloader.enqueue(
+                                                url:
+                                                    "https://image.tmdb.org/t/p/original/" +
+                                                        (imagedata[index]
+                                                            ['file_path']),
+                                                savedDir: (dir.path),
+                                                showNotification: true,
+                                                openFileFromNotification: true)
+                                            .then((value) {
+                                          Fluttertoast.showToast(
+                                              msg: "Download Completed",
+                                              toastLength: Toast.LENGTH_SHORT,
+                                              gravity: ToastGravity.BOTTOM,
+                                              backgroundColor: Colors.red[400],
+                                              textColor: Colors.white,
+                                              fontSize: 16.0);
+                                        });
+                                      }
                                     });
                                   });
                                 }),
                           ],
                           onPressed: () {
-                            print('here');
+                            // print('here');
                           },
                           child: GestureDetector(
                             onTap: () {
@@ -117,6 +167,33 @@ class ImageGridSeries extends StatelessWidget {
                                   color: customColor
                                       .hexToColor(customColor.forestBlues),
                                   child: FadeInImage.assetNetwork(
+                                    imageErrorBuilder: (bc, obj, stc) {
+                                      return Container(
+                                        alignment: Alignment.center,
+                                        color: Colors.white70,
+                                        width: 100,
+                                        height: 150,
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline,
+                                              color: Colors.red,
+                                            ),
+                                            Text(
+                                              "Error loading Image",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontFamily: "WorkSansRegular",
+                                                  fontSize: 12),
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    },
                                     placeholder: "assets/loader.gif",
                                     image: (imagedata[index])['file_path'] ==
                                             null
@@ -131,21 +208,47 @@ class ImageGridSeries extends StatelessWidget {
                     );
                   });
             }
+          } else {
+            return Container(
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).size.height * 0.4),
+              child: Center(
+                  child: Column(
+                children: [
+                  Image(
+                    image: AssetImage("assets/loader4.gif"),
+                    width: 50,
+                  ),
+                  Text("Loading Images",
+                      style: TextStyle(
+                          fontFamily: "WorkSansRegular", color: Colors.white)),
+                ],
+              )),
+            );
           }
         },
-        future: getMovieData(id));
+        future: getSeriesData(id));
   }
 }
 
-Future<String> getMovieData(String id) async {
-  final http.Response response = await http.get(
-    'https://www.reviewsbyvatsa.wtf/series_api/' + id,
-  );
+Future<String> getSeriesData(String id) async {
+  http.Response response;
+  try {
+    response = await http.get(
+      'https://www.reviewsbyvatsa.wtf/series_api/' + id,
+    );
+  } on SocketException catch (e) {
+    print(e.toString());
+    return null;
+  } catch (e) {
+    print(e);
+    return null;
+  }
   if (response.statusCode == 200) {
     // print(response.body);
     return response.body;
   } else {
     // print(response.body);
-    throw Exception('Failed to load album');
+    return null;
   }
 }

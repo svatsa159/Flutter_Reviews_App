@@ -22,7 +22,7 @@ class _newPageState extends State<newPage> {
     var f = json.decode(data['x']);
     for (int i = 0; i < f.length; i++) {
       var movie = Movie.fromJson(f[i.toString()]);
-      print(movie);
+      // print(movie);
       ll.add(movie);
     }
 

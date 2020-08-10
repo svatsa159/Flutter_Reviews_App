@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -8,6 +9,7 @@ import 'package:focused_menu/modals.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:hello/widgets/customColor.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ImageGridMovie extends StatelessWidget {
   final String id;
@@ -19,18 +21,27 @@ class ImageGridMovie extends StatelessWidget {
     FlutterDownloader.initialize();
     return FutureBuilder(
         builder: (context, projectSnap) {
-          if (projectSnap.connectionState == ConnectionState.none &&
+          if (projectSnap.connectionState == ConnectionState.waiting &&
               projectSnap.hasData == null) {
-            print('project snapshot data is: ${projectSnap.data}');
-            return Container();
-          } else {
+            // print('project snapshot data is: ${projectSnap.data}');
+            return Center(
+                child: Column(
+              children: [
+                Image(
+                  image: AssetImage("assets/loader3.gif"),
+                ),
+                Text("Loading Images"),
+              ],
+            ));
+          } else if (projectSnap.connectionState == ConnectionState.done &&
+              projectSnap.data != null) {
             var f = (projectSnap.data);
             if (f == null) {
               return Container();
             } else {
               // var imagedata = [];
               var imagedata = (json.decode(f)['images'])['posters'];
-              print(imagedata.length);
+              // print(imagedata.length);
               return GridView.builder(
                   padding: EdgeInsets.symmetric(vertical: 50),
                   itemCount: imagedata.length,
@@ -60,22 +71,53 @@ class ImageGridMovie extends StatelessWidget {
                                       textColor: Colors.white,
                                       fontSize: 16.0);
                                   getExternalStorageDirectory().then((dir) {
-                                    FlutterDownloader.enqueue(
-                                            url:
-                                                "https://image.tmdb.org/t/p/original/" +
-                                                    (imagedata[index]
-                                                        ['file_path']),
-                                            savedDir: (dir.path),
-                                            showNotification: true,
-                                            openFileFromNotification: true)
-                                        .then((value) {
-                                      Fluttertoast.showToast(
-                                          msg: "Download Completed",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor: Colors.red[400],
-                                          textColor: Colors.white,
-                                          fontSize: 16.0);
+                                    Permission.storage.status.then((value) {
+                                      if (value ==
+                                          PermissionStatus.undetermined) {
+                                        Permission.storage
+                                            .request()
+                                            .isGranted
+                                            .then((value) {
+                                          FlutterDownloader.enqueue(
+                                                  url:
+                                                      "https://image.tmdb.org/t/p/original/" +
+                                                          (imagedata[index]
+                                                              ['file_path']),
+                                                  savedDir: (dir.path),
+                                                  showNotification: true,
+                                                  openFileFromNotification:
+                                                      true)
+                                              .then((value) {
+                                            Fluttertoast.showToast(
+                                                msg: "Download Completed",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.BOTTOM,
+                                                backgroundColor:
+                                                    Colors.red[400],
+                                                textColor: Colors.white,
+                                                fontSize: 16.0);
+                                          });
+                                        });
+                                      } else if (value ==
+                                          PermissionStatus.granted) {
+                                        FlutterDownloader.enqueue(
+                                                url:
+                                                    "https://image.tmdb.org/t/p/original/" +
+                                                        (imagedata[index]
+                                                            ['file_path']),
+                                                savedDir: (dir.path),
+                                                showNotification: true,
+                                                openFileFromNotification: true)
+                                            .then((value) {
+                                          Fluttertoast.showToast(
+                                              msg: "Download Completed",
+                                              toastLength: Toast.LENGTH_SHORT,
+                                              gravity: ToastGravity.BOTTOM,
+                                              backgroundColor: Colors.red[400],
+                                              textColor: Colors.white,
+                                              fontSize: 16.0);
+                                        });
+                                      }
                                     });
                                   });
                                 }),
@@ -104,6 +146,33 @@ class ImageGridMovie extends StatelessWidget {
                                       .hexToColor(customColor.forestBlues),
                                   child: FadeInImage.assetNetwork(
                                     placeholder: "assets/loader.gif",
+                                    imageErrorBuilder: (bc, obj, stc) {
+                                      return Container(
+                                        alignment: Alignment.center,
+                                        color: Colors.white70,
+                                        width: 100,
+                                        height: 150,
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.error_outline,
+                                              color: Colors.red,
+                                            ),
+                                            Text(
+                                              "Error loading Image",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontFamily: "WorkSansRegular",
+                                                  fontSize: 12),
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    },
                                     image: (imagedata[index])['file_path'] ==
                                             null
                                         ? "https://via.placeholder.com/150x200"
@@ -117,6 +186,28 @@ class ImageGridMovie extends StatelessWidget {
                     );
                   });
             }
+          } else {
+            return Container(
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).size.height * 0.4),
+              child: Center(
+                  child: Column(
+                children: [
+                  Image(
+                    image: AssetImage("assets/loader4.gif"),
+                    width: 50,
+                  ),
+                  Container(
+                    height: 30,
+                  ),
+                  Text("Loading\nImages",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: "WorkSansRegular", color: Colors.white)),
+                ],
+              )),
+            );
+            ;
           }
         },
         future: getMovieData(id));
@@ -124,14 +215,23 @@ class ImageGridMovie extends StatelessWidget {
 }
 
 Future<String> getMovieData(String id) async {
-  final http.Response response = await http.get(
-    'https://www.reviewsbyvatsa.wtf/movie_api/' + id,
-  );
+  http.Response response;
+  try {
+    response = await http.get(
+      'https://www.reviewsbyvatsa.wtf/movie_api/' + id,
+    );
+  } on SocketException catch (e) {
+    print(e.toString());
+    return null;
+  } catch (e) {
+    print(e);
+    return null;
+  }
   if (response.statusCode == 200) {
     // print(response.body);
     return response.body;
   } else {
     // print(response.body);
-    throw Exception('Failed to load album');
+    return null;
   }
 }

@@ -7,7 +7,7 @@ class Movie {
   Movie({this.id, this.name, this.date, this.posterpath});
 
   factory Movie.fromJson(Map<String, dynamic> json) {
-    print(json);
+    // print(json);
     return Movie(
         id: json['id'].toString(),
         name: json['name'],

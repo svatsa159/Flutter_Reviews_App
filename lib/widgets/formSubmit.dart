@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hello/models/Movie.dart';
@@ -91,7 +92,7 @@ class _formSubmitState extends State<formSubmit> {
                     onChanged: (int value) {
                       setState(() {
                         _x = value;
-                        print(_x);
+                        // print(_x);
                       });
                     },
                   ),
@@ -201,6 +202,9 @@ Future<String> getData(String title, int x) async {
       },
       body: jsonEncode(<String, String>{'names': title, 'stv': x.toString()}),
     );
+  } on SocketException catch (e) {
+    print(e);
+    return null;
   } catch (e) {
     print(e);
     return null;
@@ -208,7 +212,6 @@ Future<String> getData(String title, int x) async {
   if (response.statusCode == 200) {
     return response.body;
   } else {
-    print(response.body);
-    throw Exception('Failed to load album');
+    return null;
   }
 }
